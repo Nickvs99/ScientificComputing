@@ -3,8 +3,10 @@ import matplotlib.animation as animation
 import numpy as np
 import math
 
+from shapes import Circle, Rectangle
+
 class Diffusion:
-    def __init__(self, D=1, N=50):
+    def __init__(self, D=1, N=50, objects=None):
         self.D = D
         self.N = N
         self.dx = self.dy = 1/N
@@ -20,6 +22,8 @@ class Diffusion:
         self.fig = plt.figure()
 
         self.running = True
+
+        self.sinks = self.determine_sink_points(objects)
 
     def analytic_sol(self, x, t, precision):
         if t == 0:
@@ -45,6 +49,10 @@ class Diffusion:
 
         for i in range(self.N):
             for j in range(self.N):
+
+                if (i, j) in self.sinks:
+                    continue
+
                 if 0 < j < self.N - 1:
                     self.c[j][i] = self.c[j][i] + (self.dt/(self.dx**2)) * self.D * (c_old[j][(i+1)%self.N] + c_old[j][i-1] + c_old[j+1][i] + c_old[j-1][i] - 4*c_old[j][i])
 
@@ -53,6 +61,10 @@ class Diffusion:
 
         for i in range(self.N):
             for j in range(self.N):
+
+                if (i, j) in self.sinks:
+                    continue
+
                 if 0 < j < self.N - 1:
                     self.c[j][i] = 1/4 * (c_old[j][(i+1)%self.N] + c_old[j][i-1] + c_old[j+1][i] + c_old[j-1][i])
 
@@ -67,6 +79,10 @@ class Diffusion:
 
         for i in range(self.N):
             for j in range(self.N):
+
+                if (i, j) in self.sinks:
+                    continue
+
                 if 0 < j < self.N - 1:
                     self.c[j][i] = omega/4 * (self.c[j][(i+1)%self.N] + self.c[j][i-1] + self.c[j+1][i] + self.c[j-1][i]) + (1 - omega) * c_old[j][i]
        
@@ -113,6 +129,41 @@ class Diffusion:
     def ex_E(self):
         pass
 
-sim = Diffusion()
+    def determine_sink_points(self, objects):
+        """
+        Returns which indices become sink points
+
+        Arguments:
+            objects: a list of Shape
+
+        Returns:
+            sinks: set of index coordinates
+                example structure: set( (i1, j1), (i2, j2), ...)
+        """
+        
+        sinks = set()
+        for obj in objects:
+            
+            for i in range(self.N):
+                for j in range(self.N):
+                    
+                    coordinate = (i / self.N, j / self.N)
+                    index_coordinate = (i, j)
+                    if index_coordinate in sinks:
+                        continue
+
+                    if obj.contains(coordinate):
+                        sinks.add(index_coordinate)
+
+        return sinks
+
+
+objects = [
+    Rectangle((0.2, 0.2), 0.1, 0.05),
+    Rectangle((0.4, 0.4), 0.1, 0.05),
+    Circle((0.8, 0.2), 0.05)
+]
+
+sim = Diffusion(objects=objects)
 # sim.line_animate()
 sim.im_animate()
