@@ -53,7 +53,7 @@ class Rope:
         x = np.arange(0, 1 + self.dx, self.dx)
         self.line, = ax.plot(x, self.position_table[1])
 
-        ani = animation.FuncAnimation(fig, self.update_frame, interval=1)
+        ani = animation.FuncAnimation(fig, self.update_frame, interval=0, blit=True)
         
         plt.ylim(-1, 1)
         plt.show()
