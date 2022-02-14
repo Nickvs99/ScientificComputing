@@ -116,7 +116,7 @@ class Diffusion:
         return self.line1, self.line2
 
     def im_animate(self):
-        self.im = plt.imshow(self.c, cmap='bone', animated=True)
+        self.im = plt.imshow(self.c, cmap='gist_ncar', animated=True)
         self.ani = animation.FuncAnimation(self.fig, self.im_update, interval=0, blit=True)
         plt.show()
 
@@ -140,7 +140,7 @@ class Diffusion:
             sinks: set of index coordinates
                 example structure: set( (i1, j1), (i2, j2), ...)
         """
-        
+
         sinks = set()
         for obj in objects:
             
@@ -164,6 +164,6 @@ objects = [
     Circle((0.8, 0.2), 0.05)
 ]
 
-sim = Diffusion(objects=objects)
+sim = Diffusion(objects=objects, N=200)
 # sim.line_animate()
 sim.im_animate()
