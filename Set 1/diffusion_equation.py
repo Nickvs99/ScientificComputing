@@ -90,13 +90,13 @@ class Diffusion:
             self.running = False
 
     def only_y(self):
-        return [np.mean(row) for row in self.c]
+        return np.array([np.mean(row) for row in self.c])
 
     def update(self):
-        # self.finite_diff()
+        self.finite_diff()
         # self.jacobi_iter(10**-5)
         # self.gauss_seidel(10**-5)
-        self.sor(10**-8, 1.85)
+        # self.sor(10**-8, 1.85)
 
         if not self.running:
             self.ani.event_source.stop()
@@ -127,7 +127,51 @@ class Diffusion:
         plt.show()
 
     def ex_E(self):
-        pass
+        t_values = [round(0.1**i, 3) for i in np.linspace(0, 3, 7, endpoint = True)]
+        differences = {}
+        sim_data = {}
+
+        while True:
+            if self.t in t_values:
+                analytic = np.array([self.analytic_sol(x, self.t, 10**-4) for x in np.linspace(1, 0, len(self.c))])
+                simulate = self.only_y()
+
+                differences[self.t] = simulate - analytic
+                sim_data[self.t] = simulate
+
+            if self.t == max(t_values):
+                break
+
+            self.update()
+        
+        for key, value in differences.items():
+            plt.plot(np.linspace(0, 1, len(self.c)), value, label = key)
+
+        plt.legend()
+        plt.show()
+
+        for key, value in sim_data.items():
+            plt.plot(np.linspace(0, 1, len(self.c)), value, label = key)
+
+        plt.legend()
+        plt.show()
+
+    def ex_F(self):
+        t_values = [0, 0.001, 0.01, 0.1, 1]
+
+        while True:
+            if self.t in t_values:
+                self.im = plt.imshow(self.c, cmap='bone', animated=True)
+                plt.show()
+            
+            if self.t == max(t_values):
+                break
+
+            self.update()
+
+    def ex_G(self):
+        self.im_animate()
+
 
     def determine_sink_points(self, objects):
         """
@@ -166,4 +210,7 @@ objects = [
 
 sim = Diffusion(objects=objects, N=200)
 # sim.line_animate()
-sim.im_animate()
+# sim.im_animate()
+# sim.ex_E()
+# sim.ex_F()
+sim.ex_G()
