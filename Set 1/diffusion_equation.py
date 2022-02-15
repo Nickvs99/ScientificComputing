@@ -23,7 +23,10 @@ class Diffusion:
 
         self.running = True
 
-        self.sinks = self.determine_sink_points(objects)
+        if objects:
+            self.sinks = self.determine_sink_points(objects)
+        else:
+            self.sinks = []
 
     def analytic_sol(self, x, t, precision):
         if t == 0:
