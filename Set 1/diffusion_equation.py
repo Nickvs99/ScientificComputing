@@ -1,3 +1,4 @@
+import copy
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import numpy as np
@@ -19,8 +20,9 @@ class Diffusion:
         for i in range(N):
             self.c[0][i] = 1
 
-        self.fig = plt.figure()
+        self.fig = plt.figure()  
 
+        self.iterations = 0
         self.running = True
 
         if objects:
@@ -96,15 +98,21 @@ class Diffusion:
         return np.array([np.mean(row) for row in self.c])
 
     def update(self):
-        self.finite_diff()
+        # self.finite_diff()
         # self.jacobi_iter(10**-5)
         # self.gauss_seidel(10**-5)
-        # self.sor(10**-8, 1.85)
+        self.sor(10**-8, 1.85)
 
         if not self.running:
             self.ani.event_source.stop()
             print("Stopping condition met!")
+    
+    def run_sor(self, omega):
 
+        while self.running:
+            self.sor(10**-5, omega)
+            self.iterations += 1
+    
     def im_update(self, *args):
         self.update()
         self.im.set_array(self.c)
@@ -204,6 +212,70 @@ class Diffusion:
 
         return sinks
 
+def iterations_needed(sim, omega):
+
+    copy_sim = copy.deepcopy(sim)
+    copy_sim.run_sor(omega)
+    return copy_sim.iterations
+
+def calc_optimal_omega(sim, a=1.7, b=2, tolerance=0.01):
+    """
+    Finds the omega value for which the simulations converges the fastest. It does this by
+    performing Golden Section Search.
+
+    Arguments:
+        sim (Diffusion): the diffusion object
+        a (float): minimum omega value
+        b (float): maximum omega value
+        tolerance (float): precision of the calculation
+
+    Returns:
+        omega (float)
+    """
+
+    t = (5 ** 0.5 - 1) / 2
+
+    x1 = a + (1 - t) * (b - a)
+    f1 = iterations_needed(sim, x1)
+    x2 = a + t * (b - a)
+    f2 = iterations_needed(sim, x2)
+
+    while (b - a) > tolerance:
+
+        if f1 > f2:
+            a = x1
+            x1 = x2
+            f1 = f2
+            x2 = a + t * (b - a)
+            f2 = iterations_needed(sim, x2)
+
+        else:
+            b = x2
+            x2 = x1
+            f2 = f1
+            x1 = a + (1 - t) * (b - a)
+            f1 = iterations_needed(sim, x1)
+
+    return x1 if f1 < f2 else x2
+
+def ex_J():
+
+    N_values = np.linspace(5, 200, 15, dtype=int)
+    omegas = []
+
+    for N in N_values:
+        print(f"\rCalculating optimal omega for N={N}", end="")
+        sim = Diffusion(N=N)
+        optimise_omega = calc_optimal_omega(sim)
+
+        omegas.append(optimise_omega)
+
+    plt.plot(N_values, omegas)
+
+    plt.xlabel("N")
+    plt.ylabel("Optimal omega")
+    plt.show()
+
 
 objects = [
     Rectangle((0.2, 0.2), 0.1, 0.05),
@@ -211,9 +283,11 @@ objects = [
     Circle((0.8, 0.2), 0.05)
 ]
 
-sim = Diffusion(objects=objects, N=200)
+sim = Diffusion(objects=None, N=40)
 # sim.line_animate()
 # sim.im_animate()
 # sim.ex_E()
 # sim.ex_F()
-sim.ex_G()
+# sim.ex_G()
+
+ex_J()
