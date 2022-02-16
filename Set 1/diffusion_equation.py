@@ -256,26 +256,52 @@ def calc_optimal_omega(sim, a=1.7, b=2, tolerance=0.01):
             x1 = a + (1 - t) * (b - a)
             f1 = iterations_needed(sim, x1)
 
-    return x1 if f1 < f2 else x2
+    return (x1, f1) if f1 < f2 else (x2, f2)
 
-def ex_J():
+def ex_K():
 
     N_values = np.linspace(5, 200, 15, dtype=int)
-    omegas = []
+    
+    omegas_no_objects = []
+    omegas_with_objects = []
+
+    iterations_no_objects = []
+    iterations_with_objects = []
 
     for N in N_values:
         print(f"\rCalculating optimal omega for N={N}", end="")
+
         sim = Diffusion(N=N)
-        optimise_omega = calc_optimal_omega(sim)
+        optimal_omega, optimal_iteration = calc_optimal_omega(sim)
+        omegas_no_objects.append(optimal_omega)
+        iterations_no_objects.append(optimal_iteration)
 
-        omegas.append(optimise_omega)
+        objects = [
+            Rectangle((0.2, 0.2), 0.2, 0.05),
+            Rectangle((0.4, 0.4), 0.2, 0.05),
+            Circle((0.8, 0.2), 0.1),
+        ]
 
-    plt.plot(N_values, omegas)
+        sim = Diffusion(objects=objects, N=N)
+        optimal_omega, optimal_iteration = calc_optimal_omega(sim)
+        omegas_with_objects.append(optimal_omega)
+        iterations_with_objects.append(optimal_iteration)
+
+    plt.plot(N_values, omegas_no_objects, label="No objects")
+    plt.plot(N_values, omegas_with_objects, label="With objects")
 
     plt.xlabel("N")
     plt.ylabel("Optimal omega")
+    plt.legend()
     plt.show()
 
+    plt.plot(N_values, iterations_no_objects, label="No objects")
+    plt.plot(N_values, iterations_with_objects, label="With objects")
+
+    plt.xlabel("N")
+    plt.ylabel("Iterations")
+    plt.legend()
+    plt.show()  
 
 objects = [
     Rectangle((0.2, 0.2), 0.1, 0.05),
@@ -290,4 +316,4 @@ sim = Diffusion(objects=None, N=40)
 # sim.ex_F()
 # sim.ex_G()
 
-ex_J()
+ex_K()
