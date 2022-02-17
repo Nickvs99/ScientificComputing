@@ -396,4 +396,4 @@ plt.xlim(-2, 22)
 plt.legend()
 plt.show()
 
-ex_K()
+# ex_K()
