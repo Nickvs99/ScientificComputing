@@ -53,7 +53,7 @@ class Rope:
         x = np.arange(0, 1 + self.dx, self.dx)
         self.line, = ax.plot(x, self.position_table[1])
 
-        ani = animation.FuncAnimation(fig, self.update_frame, interval=0, blit=True)
+        self.ani = animation.FuncAnimation(fig, self.update_frame, interval=1, blit=True)
         
         plt.ylim(-1, 1)
         plt.show()
@@ -84,8 +84,8 @@ class Rope:
         """
 
         xvalues = np.arange(0, 1 + self.dx, self.dx)
-
         iterations_per_plot = max_iterations // nr_plots
+        plt.figure()
 
         for i in range(max_iterations):
             

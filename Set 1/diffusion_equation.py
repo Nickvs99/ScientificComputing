@@ -49,18 +49,22 @@ class Diffusion:
         return np.array([np.mean(row) for row in self.c])
     
     def run_sor(self, omega):
-
         while self.running:
             self.sor(10**-5, omega)
             self.iterations += 1
     
     def im_update(self, *args):
         self.update()
+
         if not self.running:
             self.ani.event_source.stop()
+            
         self.im.set_array(self.c)
 
-        return self.im,
+        if self.t > 0:
+            self.text.set_text(f"t = {self.t}")
+
+        return self.im, self.text,
 
     def line_update(self, *args):
         self.update()
@@ -69,79 +73,20 @@ class Diffusion:
 
         return self.line1, self.line2
 
-    def im_animate(self):
+    def im_animate(self, cmap='gist_ncar'):
         fig = plt.figure()
-        self.im = plt.imshow(self.c, cmap='gist_ncar', animated=True)
-        self.ani = animation.FuncAnimation(fig, self.im_update, interval=0, blit=True)
+        self.im = plt.imshow(self.c, cmap=cmap, animated=True)
+        self.text = plt.text(.5, 2, '')
+        self.ani = animation.FuncAnimation(fig, self.im_update, interval=1, blit=True)
+        plt.colorbar()
         plt.show()
 
     def line_animate(self):
         fig = plt.figure()
         self.line1, = plt.plot(np.linspace(0, 1, len(self.c)), self.only_y())
         self.line2, = plt.plot(np.linspace(1, 0, len(self.c)), [self.analytic_sol(x, self.t, 10**-4) for x in np.linspace(0, 1, len(self.c))])
-        self.ani = animation.FuncAnimation(fig, self.line_update, interval=0, blit=True)
+        self.ani = animation.FuncAnimation(fig, self.line_update, interval=1, blit=True)
         plt.show()
-
-    def ex_E(self):
-        t_values = [round(0.1**i, 3) for i in np.linspace(0, 3, 7, endpoint = True)]
-        differences = {}
-        sim_data = {}
-
-        while True:
-            if self.t in t_values:
-                analytic = np.array([self.analytic_sol(x, self.t, 10**-4) for x in np.linspace(1, 0, len(self.c))])
-                simulate = self.only_y()
-
-                differences[self.t] = simulate - analytic
-                sim_data[self.t] = simulate
-
-            if self.t == max(t_values):
-                break
-
-            self.update()
-        
-        for key, value in differences.items():
-            plt.plot(np.linspace(0, 1, len(self.c)), value, label = key)
-
-        plt.legend()
-        plt.show()
-
-        for key, value in sim_data.items():
-            plt.plot(np.linspace(0, 1, len(self.c)), value, label = key)
-
-        plt.legend()
-        plt.show()
-
-    def ex_F(self):
-        t_values = [0, 0.001, 0.01, 0.1, 1]
-
-        while True:
-            if self.t in t_values:
-                self.im = plt.imshow(self.c, cmap='bone', animated=True)
-                plt.show()
-            
-            if self.t == max(t_values):
-                break
-
-            self.update()
-
-    def ex_G(self):
-        self.im_animate()
-
-    def ex_H(self):
-        while self.running:
-            self.update()
-
-    def ex_I(self):
-        deltas = []
-
-        while self.running:
-            self.update()
-            deltas.append(self.delta)
-
-        plt.plot(deltas)
-        plt.show()
-
 
     def determine_sink_points(self, objects):
         """
@@ -183,7 +128,6 @@ class FiniteDifference(Diffusion):
     def update(self):
         c_old = np.copy(self.c)
         self.t = round(self.t + self.dt, 8)
-        print(self.t)
 
         for i in range(self.N):
             for j in range(self.N):
@@ -193,6 +137,10 @@ class FiniteDifference(Diffusion):
 
                 if 0 < j < self.N - 1:
                     self.c[j][i] = self.c[j][i] + (self.dt/(self.dx**2)) * self.D * (c_old[j][(i+1)%self.N] + c_old[j][i-1] + c_old[j+1][i] + c_old[j-1][i] - 4*c_old[j][i])
+
+        if self.t > (self.N*self.dx)**2/self.D:
+            self.running = False
+            print("Equilibrium")
 
 class JacobiIteration(Diffusion):
     def __init__(self, D=1, N=50, stopping_e=10**-5, objects=None):
@@ -374,26 +322,5 @@ objects = [
 ]
 
 # sim = SuccessiveOverRelaxation(objects=objects)
-# sim = SuccessiveOverRelaxation()
 # sim.line_animate()
-# sim.im_animate()
-# sim.ex_E()
-# sim.ex_F()
-# sim.ex_G()
-# sim.ex_I()
-
-# exercise I
-for sim in [JacobiIteration(), GaussSeidel(), SuccessiveOverRelaxation()]:
-    deltas = []
-
-    while sim.running:
-        sim.update()
-        deltas.append(sim.delta)
-
-    plt.plot(deltas, label=str(sim))
-
-plt.xlim(-2, 22)
-plt.legend()
-plt.show()
-
 # ex_K()
