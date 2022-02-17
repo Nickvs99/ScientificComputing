@@ -48,9 +48,9 @@ class Diffusion:
     def only_y(self):
         return np.array([np.mean(row) for row in self.c])
     
-    def run_sor(self, omega):
+    def run(self):
         while self.running:
-            self.sor(10**-5, omega)
+            self.update()
             self.iterations += 1
     
     def im_update(self, *args):
@@ -222,15 +222,15 @@ class SuccessiveOverRelaxation(Diffusion):
 
         if self.delta < self.stopping_e:
             self.running = False
-            print("Stopping condition met!")
             
 def iterations_needed(sim, omega):
 
     copy_sim = copy.deepcopy(sim)
-    copy_sim.run_sor(omega)
+    copy_sim.omega = omega
+    copy_sim.run()
     return copy_sim.iterations
 
-def calc_optimal_omega(sim, a=1.7, b=2, tolerance=0.01):
+def calc_optimal_omega(sim, a=1, b=2, tolerance=0.01):
     """
     Finds the omega value for which the simulations converges the fastest. It does this by
     performing Golden Section Search.
@@ -242,7 +242,7 @@ def calc_optimal_omega(sim, a=1.7, b=2, tolerance=0.01):
         tolerance (float): precision of the calculation
 
     Returns:
-        omega (float)
+        tuple: (omega (float), iterations (int))
     """
 
     t = (5 ** 0.5 - 1) / 2
@@ -283,7 +283,7 @@ def ex_K():
     for N in N_values:
         print(f"\rCalculating optimal omega for N={N}", end="")
 
-        sim = Diffusion(N=N)
+        sim = SuccessiveOverRelaxation(N=N)
         optimal_omega, optimal_iteration = calc_optimal_omega(sim)
         omegas_no_objects.append(optimal_omega)
         iterations_no_objects.append(optimal_iteration)
@@ -294,7 +294,7 @@ def ex_K():
             Circle((0.8, 0.2), 0.1),
         ]
 
-        sim = Diffusion(objects=objects, N=N)
+        sim = SuccessiveOverRelaxation(objects=objects, N=N)
         optimal_omega, optimal_iteration = calc_optimal_omega(sim)
         omegas_with_objects.append(optimal_omega)
         iterations_with_objects.append(optimal_iteration)
