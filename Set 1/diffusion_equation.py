@@ -1,3 +1,4 @@
+import copy
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import numpy as np
@@ -19,9 +20,13 @@ class Diffusion:
         for i in range(N):
             self.c[0][i] = 1
 
+        self.iterations = 0
         self.running = True
 
-        self.sinks = self.determine_sink_points(objects)
+        if objects:
+            self.sinks = self.determine_sink_points(objects)
+        else:
+            self.sinks = []
 
     def analytic_sol(self, x, t, precision):
         if t == 0:
@@ -42,7 +47,13 @@ class Diffusion:
 
     def only_y(self):
         return np.array([np.mean(row) for row in self.c])
+    
+    def run_sor(self, omega):
 
+        while self.running:
+            self.sor(10**-5, omega)
+            self.iterations += 1
+    
     def im_update(self, *args):
         self.update()
         if not self.running:
@@ -60,7 +71,7 @@ class Diffusion:
 
     def im_animate(self):
         fig = plt.figure()
-        self.im = plt.imshow(self.c, cmap='bone', animated=True)
+        self.im = plt.imshow(self.c, cmap='gist_ncar', animated=True)
         self.ani = animation.FuncAnimation(fig, self.im_update, interval=0, blit=True)
         plt.show()
 
@@ -143,7 +154,7 @@ class Diffusion:
             sinks: set of index coordinates
                 example structure: set( (i1, j1), (i2, j2), ...)
         """
-        
+
         sinks = set()
 
         if objects:
@@ -264,6 +275,97 @@ class SuccessiveOverRelaxation(Diffusion):
         if self.delta < self.stopping_e:
             self.running = False
             print("Stopping condition met!")
+            
+def iterations_needed(sim, omega):
+
+    copy_sim = copy.deepcopy(sim)
+    copy_sim.run_sor(omega)
+    return copy_sim.iterations
+
+def calc_optimal_omega(sim, a=1.7, b=2, tolerance=0.01):
+    """
+    Finds the omega value for which the simulations converges the fastest. It does this by
+    performing Golden Section Search.
+
+    Arguments:
+        sim (Diffusion): the diffusion object
+        a (float): minimum omega value
+        b (float): maximum omega value
+        tolerance (float): precision of the calculation
+
+    Returns:
+        omega (float)
+    """
+
+    t = (5 ** 0.5 - 1) / 2
+
+    x1 = a + (1 - t) * (b - a)
+    f1 = iterations_needed(sim, x1)
+    x2 = a + t * (b - a)
+    f2 = iterations_needed(sim, x2)
+
+    while (b - a) > tolerance:
+
+        if f1 > f2:
+            a = x1
+            x1 = x2
+            f1 = f2
+            x2 = a + t * (b - a)
+            f2 = iterations_needed(sim, x2)
+
+        else:
+            b = x2
+            x2 = x1
+            f2 = f1
+            x1 = a + (1 - t) * (b - a)
+            f1 = iterations_needed(sim, x1)
+
+    return (x1, f1) if f1 < f2 else (x2, f2)
+
+def ex_K():
+
+    N_values = np.linspace(5, 200, 15, dtype=int)
+    
+    omegas_no_objects = []
+    omegas_with_objects = []
+
+    iterations_no_objects = []
+    iterations_with_objects = []
+
+    for N in N_values:
+        print(f"\rCalculating optimal omega for N={N}", end="")
+
+        sim = Diffusion(N=N)
+        optimal_omega, optimal_iteration = calc_optimal_omega(sim)
+        omegas_no_objects.append(optimal_omega)
+        iterations_no_objects.append(optimal_iteration)
+
+        objects = [
+            Rectangle((0.2, 0.2), 0.2, 0.05),
+            Rectangle((0.4, 0.4), 0.2, 0.05),
+            Circle((0.8, 0.2), 0.1),
+        ]
+
+        sim = Diffusion(objects=objects, N=N)
+        optimal_omega, optimal_iteration = calc_optimal_omega(sim)
+        omegas_with_objects.append(optimal_omega)
+        iterations_with_objects.append(optimal_iteration)
+
+    plt.plot(N_values, omegas_no_objects, label="No objects")
+    plt.plot(N_values, omegas_with_objects, label="With objects")
+
+    plt.xlabel("N")
+    plt.ylabel("Optimal omega")
+    plt.legend()
+    plt.show()
+
+    plt.plot(N_values, iterations_no_objects, label="No objects")
+    plt.plot(N_values, iterations_with_objects, label="With objects")
+
+    plt.xlabel("N")
+    plt.ylabel("Iterations")
+    plt.legend()
+    plt.show()  
 
 objects = [
     Rectangle((0.2, 0.2), 0.1, 0.05),
@@ -293,3 +395,5 @@ for sim in [JacobiIteration(), GaussSeidel(), SuccessiveOverRelaxation()]:
 plt.xlim(-2, 22)
 plt.legend()
 plt.show()
+
+ex_K()
