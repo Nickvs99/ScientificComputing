@@ -19,8 +19,6 @@ class Diffusion:
         for i in range(N):
             self.c[0][i] = 1
 
-        self.fig = plt.figure()
-
         self.running = True
 
         self.sinks = self.determine_sink_points(objects)
@@ -42,68 +40,13 @@ class Diffusion:
 
         return c_sum
 
-    def finite_diff(self):
-        c_old = np.copy(self.c)
-        self.t = round(self.t + self.dt, 8)
-        print(self.t)
-
-        for i in range(self.N):
-            for j in range(self.N):
-
-                if (i, j) in self.sinks:
-                    continue
-
-                if 0 < j < self.N - 1:
-                    self.c[j][i] = self.c[j][i] + (self.dt/(self.dx**2)) * self.D * (c_old[j][(i+1)%self.N] + c_old[j][i-1] + c_old[j+1][i] + c_old[j-1][i] - 4*c_old[j][i])
-
-    def jacobi_iter(self, stopping_e):
-        c_old = np.copy(self.c)
-
-        for i in range(self.N):
-            for j in range(self.N):
-
-                if (i, j) in self.sinks:
-                    continue
-
-                if 0 < j < self.N - 1:
-                    self.c[j][i] = 1/4 * (c_old[j][(i+1)%self.N] + c_old[j][i-1] + c_old[j+1][i] + c_old[j-1][i])
-
-        if np.amax(np.absolute(self.c - c_old)) < stopping_e:
-            self.running = False
-
-    def gauss_seidel(self, stopping_e):
-        self.sor(stopping_e, 1)
-
-    def sor(self, stopping_e, omega):
-        c_old = np.copy(self.c)
-
-        for i in range(self.N):
-            for j in range(self.N):
-
-                if (i, j) in self.sinks:
-                    continue
-
-                if 0 < j < self.N - 1:
-                    self.c[j][i] = omega/4 * (self.c[j][(i+1)%self.N] + self.c[j][i-1] + self.c[j+1][i] + self.c[j-1][i]) + (1 - omega) * c_old[j][i]
-       
-        if np.amax(np.absolute(self.c - c_old)) < stopping_e:
-            self.running = False
-
     def only_y(self):
         return np.array([np.mean(row) for row in self.c])
 
-    def update(self):
-        self.finite_diff()
-        # self.jacobi_iter(10**-5)
-        # self.gauss_seidel(10**-5)
-        # self.sor(10**-8, 1.85)
-
-        if not self.running:
-            self.ani.event_source.stop()
-            print("Stopping condition met!")
-
     def im_update(self, *args):
         self.update()
+        if not self.running:
+            self.ani.event_source.stop()
         self.im.set_array(self.c)
 
         return self.im,
@@ -116,14 +59,16 @@ class Diffusion:
         return self.line1, self.line2
 
     def im_animate(self):
+        fig = plt.figure()
         self.im = plt.imshow(self.c, cmap='bone', animated=True)
-        self.ani = animation.FuncAnimation(self.fig, self.im_update, interval=0, blit=True)
+        self.ani = animation.FuncAnimation(fig, self.im_update, interval=0, blit=True)
         plt.show()
 
     def line_animate(self):
+        fig = plt.figure()
         self.line1, = plt.plot(np.linspace(0, 1, len(self.c)), self.only_y())
         self.line2, = plt.plot(np.linspace(1, 0, len(self.c)), [self.analytic_sol(x, self.t, 10**-4) for x in np.linspace(0, 1, len(self.c))])
-        self.ani = animation.FuncAnimation(self.fig, self.line_update, interval=0, blit=True)
+        self.ani = animation.FuncAnimation(fig, self.line_update, interval=0, blit=True)
         plt.show()
 
     def ex_E(self):
@@ -172,6 +117,20 @@ class Diffusion:
     def ex_G(self):
         self.im_animate()
 
+    def ex_H(self):
+        while self.running:
+            self.update()
+
+    def ex_I(self):
+        deltas = []
+
+        while self.running:
+            self.update()
+            deltas.append(self.delta)
+
+        plt.plot(deltas)
+        plt.show()
+
 
     def determine_sink_points(self, objects):
         """
@@ -186,21 +145,125 @@ class Diffusion:
         """
         
         sinks = set()
-        for obj in objects:
-            
-            for i in range(self.N):
-                for j in range(self.N):
-                    
-                    coordinate = (i / self.N, j / self.N)
-                    index_coordinate = (i, j)
-                    if index_coordinate in sinks:
-                        continue
 
-                    if obj.contains(coordinate):
-                        sinks.add(index_coordinate)
+        if objects:
+            for obj in objects:
+                
+                for i in range(self.N):
+                    for j in range(self.N):
+                        
+                        coordinate = (i / self.N, j / self.N)
+                        index_coordinate = (i, j)
+                        if index_coordinate in sinks:
+                            continue
+
+                        if obj.contains(coordinate):
+                            sinks.add(index_coordinate)
 
         return sinks
 
+class FiniteDifference(Diffusion):
+    def __init__(self, D=1, N=50, objects=None):
+        super().__init__(D, N, objects)
+
+    def __str__(self):
+        return "Finite difference"
+
+    def update(self):
+        c_old = np.copy(self.c)
+        self.t = round(self.t + self.dt, 8)
+        print(self.t)
+
+        for i in range(self.N):
+            for j in range(self.N):
+
+                if (i, j) in self.sinks:
+                    continue
+
+                if 0 < j < self.N - 1:
+                    self.c[j][i] = self.c[j][i] + (self.dt/(self.dx**2)) * self.D * (c_old[j][(i+1)%self.N] + c_old[j][i-1] + c_old[j+1][i] + c_old[j-1][i] - 4*c_old[j][i])
+
+class JacobiIteration(Diffusion):
+    def __init__(self, D=1, N=50, stopping_e=10**-5, objects=None):
+        super().__init__(D, N, objects)
+
+        self.stopping_e = stopping_e
+
+    def __str__(self):
+        return "Jacobi"
+
+    def update(self):
+        c_old = np.copy(self.c)
+
+        for i in range(self.N):
+            for j in range(self.N):
+
+                if (i, j) in self.sinks:
+                    continue
+
+                if 0 < j < self.N - 1:
+                    self.c[j][i] = 1/4 * (c_old[j][(i+1)%self.N] + c_old[j][i-1] + c_old[j+1][i] + c_old[j-1][i])
+
+        self.delta = np.amax(np.absolute(self.c - c_old))
+
+        if self.delta < self.stopping_e:
+            self.running = False
+            print("Stopping condition met!")
+
+class GaussSeidel(Diffusion):
+    def __init__(self, D=1, N=50, stopping_e=10**-5, objects=None):
+        super().__init__(D, N, objects)
+
+        self.stopping_e = stopping_e
+
+    def __str__(self):
+        return "Gauss-Seidel"
+
+    def update(self):
+        c_old = np.copy(self.c)
+
+        for i in range(self.N):
+            for j in range(self.N):
+
+                if (i, j) in self.sinks:
+                    continue
+
+                if 0 < j < self.N - 1:
+                    self.c[j][i] = 1/4 * (self.c[j][(i+1)%self.N] + self.c[j][i-1] + self.c[j+1][i] + self.c[j-1][i])
+       
+        self.delta = np.amax(np.absolute(self.c - c_old))
+
+        if self.delta < self.stopping_e:
+            self.running = False
+            print("Stopping condition met!")
+
+class SuccessiveOverRelaxation(Diffusion):
+    def __init__(self, D=1, N=50, stopping_e=10**-5, omega=1.85, objects=None):
+        super().__init__(D, N, objects)
+
+        self.stopping_e = stopping_e
+        self.omega = omega
+
+    def __str__(self):
+        return "SOR"
+
+    def update(self):
+        c_old = np.copy(self.c)
+
+        for i in range(self.N):
+            for j in range(self.N):
+
+                if (i, j) in self.sinks:
+                    continue
+
+                if 0 < j < self.N - 1:
+                    self.c[j][i] = self.omega/4 * (self.c[j][(i+1)%self.N] + self.c[j][i-1] + self.c[j+1][i] + self.c[j-1][i]) + (1 - self.omega) * c_old[j][i]
+       
+        self.delta = np.amax(np.absolute(self.c - c_old))
+
+        if self.delta < self.stopping_e:
+            self.running = False
+            print("Stopping condition met!")
 
 objects = [
     Rectangle((0.2, 0.2), 0.1, 0.05),
@@ -208,9 +271,25 @@ objects = [
     Circle((0.8, 0.2), 0.05)
 ]
 
-sim = Diffusion(objects=objects)
+# sim = SuccessiveOverRelaxation(objects=objects)
+# sim = SuccessiveOverRelaxation()
 # sim.line_animate()
 # sim.im_animate()
 # sim.ex_E()
 # sim.ex_F()
-sim.ex_G()
+# sim.ex_G()
+# sim.ex_I()
+
+# exercise I
+for sim in [JacobiIteration(), GaussSeidel(), SuccessiveOverRelaxation()]:
+    deltas = []
+
+    while sim.running:
+        sim.update()
+        deltas.append(sim.delta)
+
+    plt.plot(deltas, label=str(sim))
+
+plt.xlim(-2, 22)
+plt.legend()
+plt.show()
