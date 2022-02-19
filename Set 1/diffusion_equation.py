@@ -36,7 +36,7 @@ class Diffusion:
         i = 0
 
         while True:
-            to_add = math.erfc((1 - x + 2 * i) / (2 * (self.D * self.t)**0.5)) - math.erfc((1 + x + 2 * i) / (2 * (self.D * self.t)**0.5))
+            to_add = math.erfc((1 - x + 2 * i) / (2 * (self.D * t)**0.5)) - math.erfc((1 + x + 2 * i) / (2 * (self.D * t)**0.5))
             c_sum += to_add
             i += 1
 
@@ -320,7 +320,3 @@ objects = [
     Rectangle((0.4, 0.4), 0.1, 0.05),
     Circle((0.8, 0.2), 0.05)
 ]
-
-# sim = SuccessiveOverRelaxation(objects=objects)
-# sim.line_animate()
-# ex_K()
