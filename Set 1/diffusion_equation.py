@@ -18,7 +18,7 @@ class Diffusion:
         self.c = np.zeros((N, N))
         # boundary conditions
         for i in range(N):
-            self.c[0][i] = 1
+            self.c[N-1][i] = 1
 
         self.iterations = 0
         self.running = True
@@ -75,16 +75,18 @@ class Diffusion:
 
     def im_animate(self, cmap='gist_ncar'):
         fig = plt.figure()
-        self.im = plt.imshow(self.c, cmap=cmap, animated=True)
+        self.im = plt.imshow(self.c, cmap=cmap, origin='lower', extent=(0, 1, 0, 1), animated=True)
         self.text = plt.text(.5, 2, '')
         self.ani = animation.FuncAnimation(fig, self.im_update, interval=1, blit=True)
         plt.colorbar()
+        plt.xlabel("x")
+        plt.ylabel("y")
         plt.show()
 
     def line_animate(self):
         fig = plt.figure()
         self.line1, = plt.plot(np.linspace(0, 1, len(self.c)), self.only_y())
-        self.line2, = plt.plot(np.linspace(1, 0, len(self.c)), [self.analytic_sol(x, self.t, 10**-4) for x in np.linspace(0, 1, len(self.c))])
+        self.line2, = plt.plot(np.linspace(0, 1, len(self.c)), [self.analytic_sol(x, self.t, 10**-4) for x in np.linspace(0, 1, len(self.c))])
         self.ani = animation.FuncAnimation(fig, self.line_update, interval=1, blit=True)
         plt.show()
 
