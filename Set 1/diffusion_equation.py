@@ -206,7 +206,7 @@ class SuccessiveOverRelaxation(Diffusion):
         self.omega = omega
 
     def __str__(self):
-        return "SOR"
+        return rf"SOR $\omega$ = {self.omega}"
 
     def update(self):
         c_old = np.copy(self.c)
@@ -224,6 +224,7 @@ class SuccessiveOverRelaxation(Diffusion):
 
         if self.delta < self.stopping_e:
             self.running = False
+            print("Stopping condition met!")
             
 def iterations_needed(sim, omega):
 
@@ -272,53 +273,53 @@ def calc_optimal_omega(sim, a=1, b=2, tolerance=0.01):
 
     return (x1, f1) if f1 < f2 else (x2, f2)
 
-def ex_K():
+# def ex_K():
 
-    N_values = np.linspace(5, 200, 15, dtype=int)
+#     N_values = np.linspace(5, 200, 15, dtype=int)
     
-    omegas_no_objects = []
-    omegas_with_objects = []
+#     omegas_no_objects = []
+#     omegas_with_objects = []
 
-    iterations_no_objects = []
-    iterations_with_objects = []
+#     iterations_no_objects = []
+#     iterations_with_objects = []
 
-    for N in N_values:
-        print(f"\rCalculating optimal omega for N={N}", end="")
+#     for N in N_values:
+#         print(f"\rCalculating optimal omega for N={N}", end="")
 
-        sim = SuccessiveOverRelaxation(N=N)
-        optimal_omega, optimal_iteration = calc_optimal_omega(sim)
-        omegas_no_objects.append(optimal_omega)
-        iterations_no_objects.append(optimal_iteration)
+#         sim = SuccessiveOverRelaxation(N=N)
+#         optimal_omega, optimal_iteration = calc_optimal_omega(sim)
+#         omegas_no_objects.append(optimal_omega)
+#         iterations_no_objects.append(optimal_iteration)
 
-        objects = [
-            Rectangle((0.2, 0.2), 0.2, 0.05),
-            Rectangle((0.4, 0.4), 0.2, 0.05),
-            Circle((0.8, 0.2), 0.1),
-        ]
+#         objects = [
+#             Rectangle((0.2, 0.2), 0.2, 0.05),
+#             Rectangle((0.4, 0.4), 0.2, 0.05),
+#             Circle((0.8, 0.2), 0.1),
+#         ]
 
-        sim = SuccessiveOverRelaxation(objects=objects, N=N)
-        optimal_omega, optimal_iteration = calc_optimal_omega(sim)
-        omegas_with_objects.append(optimal_omega)
-        iterations_with_objects.append(optimal_iteration)
+#         sim = SuccessiveOverRelaxation(objects=objects, N=N)
+#         optimal_omega, optimal_iteration = calc_optimal_omega(sim)
+#         omegas_with_objects.append(optimal_omega)
+#         iterations_with_objects.append(optimal_iteration)
 
-    plt.plot(N_values, omegas_no_objects, label="No objects")
-    plt.plot(N_values, omegas_with_objects, label="With objects")
+#     plt.plot(N_values, omegas_no_objects, label="No objects")
+#     plt.plot(N_values, omegas_with_objects, label="With objects")
 
-    plt.xlabel("N")
-    plt.ylabel("Optimal omega")
-    plt.legend()
-    plt.show()
+#     plt.xlabel("N")
+#     plt.ylabel("Optimal omega")
+#     plt.legend()
+#     plt.show()
 
-    plt.plot(N_values, iterations_no_objects, label="No objects")
-    plt.plot(N_values, iterations_with_objects, label="With objects")
+#     plt.plot(N_values, iterations_no_objects, label="No objects")
+#     plt.plot(N_values, iterations_with_objects, label="With objects")
 
-    plt.xlabel("N")
-    plt.ylabel("Iterations")
-    plt.legend()
-    plt.show()  
+#     plt.xlabel("N")
+#     plt.ylabel("Iterations")
+#     plt.legend()
+#     plt.show()  
 
-objects = [
-    Rectangle((0.2, 0.2), 0.1, 0.05),
-    Rectangle((0.4, 0.4), 0.1, 0.05),
-    Circle((0.8, 0.2), 0.05)
-]
+# objects = [
+#     Rectangle((0.2, 0.2), 0.1, 0.05),
+#     Rectangle((0.4, 0.4), 0.1, 0.05),
+#     Circle((0.8, 0.2), 0.05)
+# ]

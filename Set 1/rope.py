@@ -55,6 +55,8 @@ class Rope:
 
         self.ani = animation.FuncAnimation(fig, self.update_frame, interval=1, blit=True)
         
+        plt.xlabel("x")
+        plt.ylabel(r"$\Psi$")
         plt.ylim(-1, 1)
         plt.show()
 
@@ -93,6 +95,8 @@ class Rope:
             if i % iterations_per_plot == 0:
                 plt.plot(xvalues, self.position_table[1], label=f"t = {self.dt * i: .2f}")
         
+        plt.xlabel("x")
+        plt.ylabel(r"$\Psi$")
         plt.legend()
         plt.show()
 
