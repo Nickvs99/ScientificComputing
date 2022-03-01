@@ -20,9 +20,12 @@ class MonteCarloDLA():
 
         self.running = True
 
+        # The heighest index of the structure
+        self.structure_top_index = 0
+
     def update(self):
 
-        walker = RandomWalker(self.generate_random_walker_position(), bounds=[self.N, self.N])
+        walker = RandomWalker(self.generate_random_walker_position(), bounds=[self.N, self.structure_top_index + 1])
 
         while True:
             
@@ -38,15 +41,16 @@ class MonteCarloDLA():
                 # Add position of walker to the structure
                 self.grid[walker.position[1]][walker.position[0]] = 1
 
+                self.structure_top_index = max(self.structure_top_index, walker.position[1])
                 if walker.position[1] == self.N - 1:
                     self.running = False
 
                 return
 
     def generate_random_walker_position(self):
-        """ Generate a random position at the top. """
+        """ Generate a random position one row above the heighest cell of the structure. """
 
-        return [random.randint(0, self.N - 1), self.N - 1]
+        return [random.randint(0, self.N - 1), self.structure_top_index + 1]
 
     def is_walker_connected(self, walker):
         """ Checks if a random walker is connected to the structure. """
@@ -115,11 +119,8 @@ class RandomWalker():
 
 def main():
 
-    sim = MonteCarloDLA(N=100)
-    sim.animate()
-
-    # TODO spawn walker only one row above the structure, instead of the top
-    
+    sim = MonteCarloDLA(N=200)
+    sim.animate()    
 
 if __name__ == "__main__":
     main()
