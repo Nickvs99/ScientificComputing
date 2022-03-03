@@ -6,7 +6,7 @@ import math
 from matplotlib.colors import Normalize
 
 class GrayScott:
-    def __init__(self, N=100, dt=1, dx=1, Du=0.16, Dv=0.08, f=0.035, k=0.06, square_size = 0.5):
+    def __init__(self, N=100, dt=1, dx=1, Du=0.16, Dv=0.08, f=0.035, k=0.06, square_size = 0.5, noise=0):
         self.N = N
         self.dx = dx
         self.dt = dt
@@ -24,6 +24,9 @@ class GrayScott:
             for j in range(N):
                 if (0.5 - square_size/2)*N < i < (0.5 + square_size/2)*N and (0.5 - square_size/2)*N < j < (0.5 + square_size/2)*N:
                     self.v[j, i] = 0.25
+
+                self.u[j,i] = min(0.95, max(0, self.u[j,i] + np.random.normal(0, noise)))
+                self.v[j,i] = min(0.95, max(0, self.v[j,i] + np.random.normal(0, noise)))
 
         self.iterations = 0
         self.running = True
@@ -49,8 +52,8 @@ class GrayScott:
 
     def im_animate(self, cmap='gist_ncar'):
         fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True, figsize=(12,6))
-        self.im_u = ax1.imshow(self.u, cmap=cmap, norm=Normalize(0, 1), origin='lower', extent=(0, 1, 0, 1), animated=True)
-        self.im_v = ax2.imshow(self.v, cmap=cmap, norm=Normalize(0, 1), origin='lower', extent=(0, 1, 0, 1), animated=True)
+        self.im_u = ax1.imshow(self.u, cmap=cmap, norm=Normalize(0, 1), origin='lower', extent=(0, round(self.dx*self.N,8), 0, round(self.dx*self.N,8)), animated=True)
+        self.im_v = ax2.imshow(self.v, cmap=cmap, norm=Normalize(0, 1), origin='lower', extent=(0, round(self.dx*self.N,8), 0, round(self.dx*self.N,8)), animated=True)
         ax1.set_title("u", fontsize=20)
         ax2.set_title("v", fontsize=20)
         # self.text = ax1.text(2, 2, 'gfgs')
@@ -79,4 +82,4 @@ class GrayScott:
                 self.v[j][i] += self.dt * (self.Dv * (v_old[j][(i+1)%self.N] + v_old[j][i-1] + v_old[(j+1)%self.N][i] + v_old[j-1][i] - 4*v_old[j][i])/(self.dx**2) 
                                            + u_old[j][i] * v_old[j][i]**2 - (self.f + self.k) * v_old[j][i])
 
-GrayScott().im_animate()
+GrayScott(noise=0).im_animate() #'nipy_spectral')
