@@ -87,6 +87,10 @@ class DLA_SOR:
         grow_probs = [prob/prob_sum for prob in grow_probs]
         grow_choice = np.random.choice(len(growth_candidates), p=grow_probs)
         self.object_points.add(growth_candidates[grow_choice])
+        
+        # Simulation stops when structure has reached the top
+        if growth_candidates[grow_choice][1] == self.N - 1:
+             self.running = False
 
     def update(self):
         self.solve()
@@ -103,6 +107,10 @@ class DLA_SOR:
         while self.running:
             self.update()
             self.iterations += 1
+        
+    def calc_density(self):
+
+        return len(self.object_points) / (self.N * self.N)
     
     def im_update(self, *args):
         self.update()
@@ -179,8 +187,9 @@ class DLA_SOR:
 
         return sinks
 
-test = DLA_SOR()
-test.im_animate()
+if __name__ == "__main__":
+    test = DLA_SOR()
+    test.im_animate()
             
 def iterations_needed(sim, omega):
 
