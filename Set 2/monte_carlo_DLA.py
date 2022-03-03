@@ -10,7 +10,7 @@ class MonteCarloDLA():
     random walkers.
     """
 
-    def __init__(self, N=100, sticking_probability=0.1):
+    def __init__(self, N=100, sticking_probability=1):
 
         self.N = N
         self.grid = np.zeros((N, N))
@@ -74,6 +74,10 @@ class MonteCarloDLA():
 
         return False
 
+    def calc_density(self):
+
+        return np.count_nonzero(self.grid == 1) / self.grid.size
+
     def animate(self):
 
         fig = plt.figure()
@@ -94,7 +98,7 @@ class MonteCarloDLA():
     def create_plot(self):
         fig = plt.figure()
         plt.imshow(self.grid, cmap='bone', origin='lower')
-        plt.title(f"p = {self.sticking_probability}")
+        plt.title(f"p = {self.sticking_probability:.2f}, density={self.calc_density()}")
 
 class RandomWalker():
 
@@ -134,13 +138,34 @@ class RandomWalker():
 
         return 0 <= coordinate[0] < self.bounds[0] and 0 <= coordinate[1] < self.bounds[1]
 
+class MonteCarloDLAManager():
+    """
+    Manages M distinct monte carlo DLA simulations.
+    """
+
+    def __init__(self, M, N=100, sticking_probability=1):
+
+        self.M = M
+        self.N = N
+        self.sticking_probability = sticking_probability
+
+    def calc_density(self):
+
+        values = []
+        for i in range(self.M):
+            
+            sim = MonteCarloDLA(N=self.N, sticking_probability=self.sticking_probability)
+            sim.run()
+            values.append(sim.calc_density())
+
+        return np.mean(values), np.std(values)
 
 def main():
 
     ps = np.arange(0.1, 1.1, 0.1)
     for p in ps:
         print(f"\rRunning sticking probability: {p:.2f}", end="")
-        
+    
         sim = MonteCarloDLA(N=100, sticking_probability=p)
         sim.run()
         sim.create_plot()   
