@@ -31,6 +31,10 @@ class GrayScott:
         self.iterations = 0
         self.running = True
     
+    def __str__(self):
+
+        return f"GrayScott: N={self.N}, noise={self.noise}"
+
     def run(self):
         while self.running:
             self.update()

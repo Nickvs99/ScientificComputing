@@ -25,6 +25,9 @@ class MonteCarloDLA():
 
         self.sticking_probability = sticking_probability
 
+    def __str__(self):
+        return f"MC_DLA: N={self.N}, sticking_prob={self.sticking_probability}"
+        
     def run(self):
         while self.running:
             self.update()

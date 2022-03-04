@@ -35,6 +35,10 @@ class DLA_SOR:
         self.object_points = object_points
         if self.object_points == None:
             self.object_points = set([(int(N/2), 0)])
+    
+    def __str__(self):
+
+        return f"DLA_SOR: N={self.N}, eta={self.eta}, omega={self.omega}, stopping_e={self.stopping_e}"
 
     def analytic_sol(self, x, t, precision):
         if t == 0:
