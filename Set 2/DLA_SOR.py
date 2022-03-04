@@ -29,6 +29,7 @@ class DLA_SOR:
                 self.c[j][i] = j/self.N
 
         self.iterations = 0
+        self.sor_iterations = 0
         self.running = True
 
         self.object_points = object_points
@@ -67,6 +68,8 @@ class DLA_SOR:
                         self.c[j][i] = self.omega/4 * (self.c[j][(i+1)%self.N] + self.c[j][i-1] + self.c[j+1][i] + self.c[j-1][i]) + (1 - self.omega) * c_old[j][i]
         
             self.delta = np.amax(np.absolute(self.c - c_old))
+
+            self.sor_iterations += 1
 
         self.delta = float('inf')
 
@@ -157,6 +160,23 @@ class DLA_SOR:
         self.ani = animation.FuncAnimation(fig, self.line_update, interval=1, blit=True)
         plt.show()
 
+    def create_plot(self, cmap='gist_ncar'):
+
+        fig = plt.figure()
+        
+        sink_c = np.copy(self.c)
+
+        for i in range(self.N):
+            for j in range(self.N):
+                if (i, j) in self.object_points:
+                    sink_c[j][i] = 1
+
+        plt.imshow(sink_c, cmap=cmap, origin='lower', extent=(0, 1, 0, 1))
+
+        plt.colorbar()
+        plt.xlabel("x")
+        plt.ylabel("y")
+
     def determine_sink_points(self, objects):
         """
         Returns which indices become sink points
@@ -196,7 +216,7 @@ def iterations_needed(sim, omega):
     copy_sim = copy.deepcopy(sim)
     copy_sim.omega = omega
     copy_sim.run()
-    return copy_sim.iterations
+    return copy_sim.sor_iterations
 
 def calc_optimal_omega(sim, a=1, b=2, tolerance=0.01):
     """
