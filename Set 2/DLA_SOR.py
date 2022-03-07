@@ -7,7 +7,7 @@ import math
 # from shapes import Circle, Rectangle
 
 class DLA_SOR:
-    def __init__(self, stopping_e=10**-3, omega=1.9, eta=100, D=1, N=100, object_points=None):
+    def __init__(self, stopping_e=10, omega=1.9, eta=1, D=1, N=100, object_points=None):
         self.D = D
         self.N = N
         self.dx = self.dy = 1/N
@@ -31,9 +31,14 @@ class DLA_SOR:
         self.iterations = 0
         self.running = True
 
+        self.growth_candidates = []
+
         self.object_points = object_points
         if self.object_points == None:
-            self.object_points = set([(int(N/2), 0)])
+            self.object_points = set([(N//2, 0)])
+            
+        for point in self.object_points:
+            self.add_candidates(point)
 
     def analytic_sol(self, x, t, precision):
         if t == 0:
@@ -70,23 +75,25 @@ class DLA_SOR:
 
         self.delta = float('inf')
 
+    def add_candidates(self, point):
+        for neighbor in (((point[0]+1)%self.N,point[1]),((point[0]-1)%self.N,point[1]),(point[0],point[1]+1),(point[0],point[1]-1)):
+            if 0 <= neighbor[1] < self.N and neighbor not in self.object_points and neighbor not in self.growth_candidates:
+                self.growth_candidates.append(neighbor)
+
     def grow(self):
-        growth_candidates = []
-
-        for point in self.object_points:
-            for neighbor in ((point[0]+1,point[1]),(point[0]-1,point[1]),(point[0],point[1]+1),(point[0],point[1]-1)):
-                if 0 <= neighbor[0] < self.N and 0 <= neighbor[1] < self.N and neighbor not in self.object_points and neighbor not in growth_candidates:
-                    growth_candidates.append(neighbor)
-
         grow_probs = []
 
-        for candidate in growth_candidates:
+        for candidate in self.growth_candidates:
             grow_probs.append(abs(self.c[candidate[1]][candidate[0]])**self.eta)
+            # print(candidate, self.c[candidate[1]][candidate[0]])
+
+        # print("\n\n\n\n\n\n\n")
     
-        prob_sum = sum(grow_probs)
-        grow_probs = [prob/prob_sum for prob in grow_probs]
-        grow_choice = np.random.choice(len(growth_candidates), p=grow_probs)
-        self.object_points.add(growth_candidates[grow_choice])
+        # print([(self.growth_candidates[i], grow_probs[i]/sum(grow_probs)) for i in range(len(grow_probs))])
+        grow_choice = np.random.choice(len(self.growth_candidates), p=[prob/sum(grow_probs) for prob in grow_probs])
+        new_point = self.growth_candidates.pop(grow_choice)
+        self.object_points.add(new_point)
+        self.add_candidates(new_point)
 
     def update(self):
         self.solve()
@@ -116,6 +123,8 @@ class DLA_SOR:
             for j in range(self.N):
                 if (i, j) in self.object_points:
                     sink_c[j][i] = 1
+            
+        # sink_c = np.append(sink_c, sink_c, 1)
             
         self.im.set_array(sink_c)
 
