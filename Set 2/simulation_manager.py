@@ -21,15 +21,18 @@ class SimulationManager():
         self.args = args
         self.kwargs = kwargs
     
-    def calc_attribute(self, attribute):
+    def calc_attribute(self, attribute, run=True, show_progress=True):
         """ Returns the mean and std of the given attribute. """
 
         values = []
         for i in range(self.n_instances):
             
             instance = self.class_type(*self.args, **self.kwargs)
-            instance.run()
+            if show_progress:
+                print(f"\r{i / self.n_instances * 100}% {instance}", end="")
+            if run:
+                instance.run()
 
             values.append(attribute(instance))
 
-        return np.mean(values), np.std(values)
+        return np.mean(values), np.std(values)        

@@ -25,6 +25,9 @@ class MonteCarloDLA():
 
         self.sticking_probability = sticking_probability
 
+    def __str__(self):
+        return f"MC_DLA: N={self.N}, sticking_prob={self.sticking_probability}"
+        
     def run(self):
         while self.running:
             self.update()
@@ -137,28 +140,6 @@ class RandomWalker():
     def is_in_bounds(self, coordinate):
 
         return 0 <= coordinate[0] < self.bounds[0] and 0 <= coordinate[1] < self.bounds[1]
-
-class MonteCarloDLAManager():
-    """
-    Manages M distinct monte carlo DLA simulations.
-    """
-
-    def __init__(self, M, N=100, sticking_probability=1):
-
-        self.M = M
-        self.N = N
-        self.sticking_probability = sticking_probability
-
-    def calc_density(self):
-
-        values = []
-        for i in range(self.M):
-            
-            sim = MonteCarloDLA(N=self.N, sticking_probability=self.sticking_probability)
-            sim.run()
-            values.append(sim.calc_density())
-
-        return np.mean(values), np.std(values)
 
 def main():
 

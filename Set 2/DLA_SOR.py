@@ -29,6 +29,7 @@ class DLA_SOR:
                 self.c[j][i] = j/self.N
 
         self.iterations = 0
+        self.sor_iterations = 0
         self.running = True
 
         self.growth_candidates = []
@@ -39,6 +40,11 @@ class DLA_SOR:
             
         for point in self.object_points:
             self.add_candidates(point)
+            self.object_points = set([(int(N/2), 0)])
+    
+    def __str__(self):
+
+        return f"DLA_SOR: N={self.N}, eta={self.eta}, omega={self.omega}, stopping_e={self.stopping_e}"
 
     def analytic_sol(self, x, t, precision):
         if t == 0:
@@ -73,6 +79,8 @@ class DLA_SOR:
         
             self.delta = np.amax(np.absolute(self.c - c_old))
 
+            self.sor_iterations += 1
+
         self.delta = float('inf')
 
     def add_candidates(self, point):
@@ -94,6 +102,10 @@ class DLA_SOR:
         new_point = self.growth_candidates.pop(grow_choice)
         self.object_points.add(new_point)
         self.add_candidates(new_point)
+        
+        # Simulation stops when structure has reached the top
+        if new_point[1] == self.N - 1:
+             self.running = False
 
     def update(self):
         self.solve()
@@ -110,6 +122,10 @@ class DLA_SOR:
         while self.running:
             self.update()
             self.iterations += 1
+        
+    def calc_density(self):
+
+        return len(self.object_points) / (self.N * self.N)
     
     def im_update(self, *args):
         self.update()
@@ -158,6 +174,23 @@ class DLA_SOR:
         self.ani = animation.FuncAnimation(fig, self.line_update, interval=1, blit=True)
         plt.show()
 
+    def create_plot(self, cmap='gist_ncar'):
+
+        fig = plt.figure()
+        
+        sink_c = np.copy(self.c)
+
+        for i in range(self.N):
+            for j in range(self.N):
+                if (i, j) in self.object_points:
+                    sink_c[j][i] = 1
+
+        plt.imshow(sink_c, cmap=cmap, origin='lower', extent=(0, 1, 0, 1))
+
+        plt.colorbar()
+        plt.xlabel("x")
+        plt.ylabel("y")
+
     def determine_sink_points(self, objects):
         """
         Returns which indices become sink points
@@ -188,15 +221,16 @@ class DLA_SOR:
 
         return sinks
 
-test = DLA_SOR()
-test.im_animate()
+if __name__ == "__main__":
+    test = DLA_SOR()
+    test.im_animate()
             
 def iterations_needed(sim, omega):
 
     copy_sim = copy.deepcopy(sim)
     copy_sim.omega = omega
     copy_sim.run()
-    return copy_sim.iterations
+    return copy_sim.sor_iterations
 
 def calc_optimal_omega(sim, a=1, b=2, tolerance=0.01):
     """
