@@ -7,7 +7,7 @@ import math
 # from shapes import Circle, Rectangle
 
 class DLA_SOR:
-    def __init__(self, stopping_e=10, omega=1.9, eta=1, D=1, N=100, object_points=None):
+    def __init__(self, stopping_e=10**-4, omega=1.3, eta=1, D=1, N=100, object_points=None):
         self.D = D
         self.N = N
         self.dx = self.dy = 1/N
@@ -161,7 +161,7 @@ class DLA_SOR:
 
         self.im = plt.imshow(self.c, cmap=cmap, origin='lower', extent=(0, 1, 0, 1), animated=True)
         self.text = plt.text(.5, 2, '')
-        self.ani = animation.FuncAnimation(fig, self.im_update, interval=1, blit=True)
+        self.ani = animation.FuncAnimation(fig, self.im_update, interval=0, blit=True)
         plt.colorbar()
         plt.xlabel("x")
         plt.ylabel("y")

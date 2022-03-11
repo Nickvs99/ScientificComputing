@@ -67,7 +67,6 @@ class GrayScott:
         ax2.set_ylabel("y")
         fig.colorbar(self.im_u, ax=ax1, fraction=0.046, pad=0.04)
         fig.colorbar(self.im_v, ax=ax2, fraction=0.046, pad=0.04)
-        
         self.ani = animation.FuncAnimation(fig, self.im_update, interval=1, blit=True)
         plt.show()
 
@@ -86,4 +85,41 @@ class GrayScott:
                 self.v[j][i] += self.dt * (self.Dv * (v_old[j][(i+1)%self.N] + v_old[j][i-1] + v_old[(j+1)%self.N][i] + v_old[j-1][i] - 4*v_old[j][i])/(self.dx**2) 
                                            + u_old[j][i] * v_old[j][i]**2 - (self.f + self.k) * v_old[j][i])
 
-GrayScott(noise=0).im_animate() #'nipy_spectral')
+        return min(np.amax(np.absolute(self.u - u_old)), np.amax(np.absolute(self.v - v_old)))
+
+    def run_till_converge(self, delta=10**-4, max_t=float('inf'), cmap='gist_ncar'):
+        while self.update() > delta:
+            if self.t > max_t:
+                break
+
+        print(self.t, end='\r')
+
+        self.make_plot(cmap=cmap)
+
+    def make_plot(self, cmap='gist_ncar'):
+        fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True, figsize=(12,6))
+        self.im_u = ax1.imshow(self.u, cmap=cmap, norm=Normalize(0, 1), origin='lower', extent=(0, round(self.dx*self.N,8), 0, round(self.dx*self.N,8)))
+        self.im_v = ax2.imshow(self.v, cmap=cmap, norm=Normalize(0, 1), origin='lower', extent=(0, round(self.dx*self.N,8), 0, round(self.dx*self.N,8)))
+        ax1.set_title("u", fontsize=20)
+        ax2.set_title("v", fontsize=20)
+        ax1.set_xlabel("x")
+        ax1.set_ylabel("y")
+        ax2.set_xlabel("x")
+        ax2.set_ylabel("y")
+        # fig.suptitle(f"t={self.t}")
+        fig.colorbar(self.im_u, ax=ax1, fraction=0.046, pad=0.04)
+        fig.colorbar(self.im_v, ax=ax2, fraction=0.046, pad=0.04)
+        plt.show()
+
+if __name__ == "__main__":
+    GrayScott(N=100, 
+            dt=1, 
+            dx=1, 
+            Du=0.16, 
+            Dv=0.08, 
+            f=0.035, 
+            k=0.06, 
+            square_size = 0.1, 
+            noise=0).im_animate('bone') #'nipy_spectral')
+
+    # GrayScott(noise=0.0).run_till_converge(max_t=20)
