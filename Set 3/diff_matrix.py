@@ -16,7 +16,7 @@ def compute_matrix(n, m):
 
         neighbour_indices = get_neighbours(index, n, m)
         
-        matrix[index][index] = -len(neighbour_indices)
+        matrix[index][index] = -4 #len(neighbour_indices)
 
         for neighbour_indices in neighbour_indices:
             matrix[index][neighbour_indices] = 1
@@ -31,7 +31,6 @@ def get_neighbours(index, n, m):
     neighbour_indices = []  
     temp_neighbour_indices = [index - 1, index + 1, index - m, index + m]
     for neighbour_index in temp_neighbour_indices:
-
 
         if neighbour_index >= 0 and neighbour_index <= n * m - 1 and (neighbour_index  // m == index_row or neighbour_index % m == index_column):
             neighbour_indices.append(neighbour_index)
