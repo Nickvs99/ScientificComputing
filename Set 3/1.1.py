@@ -2,6 +2,8 @@ from diff_matrix import *
 import scipy.linalg as la
 import scipy.sparse.linalg as la_sparse
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+from matplotlib.colors import Normalize
 import time
 
 class WaveEquation:
@@ -40,7 +42,7 @@ class WaveEquation:
 
         return eigenvalues.real[sort_indices[::-1]], eigenvectors.T.real[sort_indices[::-1]], duration
 
-    def time_dependence(t, eigenvalue, A=1, B=1):
+    def time_dependence(self, t, eigenvalue, A=1, B=1):
         eigenfreq = (-eigenvalue)**0.5
         return A * np.cos(self.c * eigenfreq * t) + B * np.sin(self.c * eigenfreq * t)
 
@@ -52,18 +54,25 @@ class WaveEquation:
             eigenvector = eigendata[1][i]
             self.make_plot(np.reshape(eigenvector, (self.M, self.N)), (-eigenvalue)**0.5)
 
-    def im_animate(self, cmap='gist_ncar'):
+    def im_update(self, frame, eigenvector, eigenvalue, t_step):
+        self.im.set_array(np.reshape(eigenvector, (self.M, self.N)) * self.time_dependence(frame * t_step, eigenvalue))
+
+        if frame > 0:
+            self.text.set_text(f"t = {frame}")
+
+        return self.im, self.text,
+
+    def im_animate(self, eigenvector, eigenvalue, t_start, t_end, t_step, cmap='bone'):
         fig = plt.figure()
-        self.im = plt.imshow(self.c, cmap=cmap, origin='lower', extent=(0, 1, 0, 1), animated=True)
+        self.im = plt.imshow(np.reshape(eigenvector, (self.M, self.N)), norm=Normalize(-np.amax(eigenvector) * 2, np.amax(eigenvector) * 2), cmap=cmap, origin='lower', extent=(0, 1, 0, 1), animated=True)
         self.text = plt.text(.5, 2, '')
-        self.ani = animation.FuncAnimation(fig, self.im_update, interval=1, blit=True)
+        self.ani = animation.FuncAnimation(fig, self.im_update, fargs=(eigenvector, eigenvalue, t_step,), interval=1, blit=True)
         plt.colorbar()
         plt.xlabel("x")
         plt.ylabel("y")
         plt.show()
 
     def make_plot(self, v, title=None, extent=None):
-
         if extent is None:
             extent = (0, self.L_x, 0, self.L_y)
 
@@ -76,10 +85,6 @@ class WaveEquation:
         if title:
             plt.title(title)
         plt.show()
-
-# class Eigenmode:
-#     def __init__(self, eigenvector, eigenvalue):
-
 
     def direct_method(self, source=(0.6, 1.2)):
         """
@@ -106,6 +111,12 @@ class WaveEquation:
 if __name__ == "__main__":
     # WaveEquation(dx=0.01, L_x = 1, circle=False, sparse=True).show_eigenvectors(10)
     # WaveEquation(dx=0.01, L_x = 1, circle=False, sparse=False).show_eigenvectors(10)
-    eq = WaveEquation(dx=0.03, L_x=4, L_y=4, circle=True)
-    eq.direct_method()
+    # eq = WaveEquation(dx=0.03, L_x=4, L_y=4, circle=True)
+    # eq.direct_method()
     # WaveEquation(dx=0.02, L_x = 1, circle=True).show_eigenvectors(10)
+
+    wave = WaveEquation(dx=0.04, L_x = 1, circle=True, sparse=True)
+    eigenvalues = wave.eigenvalues(10)
+
+    for i in range(len(eigenvalues[0])):
+        wave.im_animate(eigenvector=eigenvalues[1][i], eigenvalue=eigenvalues[0][i], t_start=0, t_end=100, t_step=0.01)
