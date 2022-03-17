@@ -111,8 +111,7 @@ class WaveEquation:
 if __name__ == "__main__":
     # WaveEquation(dx=0.01, L_x = 1, circle=False, sparse=True).show_eigenvectors(10)
     # WaveEquation(dx=0.01, L_x = 1, circle=False, sparse=False).show_eigenvectors(10)
-    # eq = WaveEquation(dx=0.03, L_x=4, L_y=4, circle=True)
-    # eq.direct_method()
+
     # WaveEquation(dx=0.02, L_x = 1, circle=True).show_eigenvectors(10)
 
     wave = WaveEquation(dx=0.04, L_x = 1, circle=True, sparse=True)
