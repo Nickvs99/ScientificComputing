@@ -49,14 +49,32 @@ class Spring:
         plt.plot(self.t_values, self.x_values, label="position")
         plt.plot(self.t_values, self.v_values, label="velocity")
         # plt.plot(self.t_values, self.force, label="force")
+
+        plt.xlabel("t")
+
         plt.legend()
+
+    def create_phase_plot(self):
+
+        plt.figure()
+        plt.plot(self.v_values, self.x_values)
+        plt.xlabel("v")
+        plt.ylabel("x")
 
 def main():
 
-    for k in np.logspace(-1, 1, 10):
-        spring = Spring(0.5, 0, dt=0.01, k=k, driving_force_amplitude=1)
+    # for k in np.logspace(-1, 1, 10):
+    #     spring = Spring(0.5, 0, dt=0.01, k=k, driving_force_amplitude=1)
+    #     spring.run(iterations=10000)
+    #     spring.create_plot()
+
+    # plt.show()
+
+    for omega in np.logspace(-1, 1, 10):
+
+        spring = Spring(0.5, 0, driving_force_amplitude=1, omega=omega)
         spring.run(iterations=10000)
-        spring.create_plot()
+        spring.create_phase_plot()
 
     plt.show()
 
