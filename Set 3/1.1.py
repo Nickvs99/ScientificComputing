@@ -2,6 +2,7 @@ from diff_matrix import *
 import scipy.linalg as la
 import scipy.sparse.linalg as la_sparse
 import matplotlib.pyplot as plt
+import time
 
 class WaveEquation:
     def __init__(self, c=1, dx=0.01, L_x=1, L_y=1, circle=False, sparse=False):
@@ -25,13 +26,23 @@ class WaveEquation:
                                 self.matrix[j * self.N + i][m] = 0
 
     def eigenvalues(self, k):
+        start = time.time()
+
         if self.sparse:
-            eigenvalues, eigenvectors = la_sparse.eigs(self.matrix, k=10, which='LR')
+            eigenvalues, eigenvectors = la_sparse.eigs(self.matrix, k=k, which='LR')
         else:
             eigenvalues, eigenvectors = la.eig(self.matrix)
+
+        duration = time.time() - start
+        print(f"{duration} s")
+        
         sort_indices = eigenvalues.argsort()[len(eigenvalues) - k:]
 
-        return eigenvalues.real[sort_indices[::-1]], eigenvectors.T.real[sort_indices[::-1]]
+        return eigenvalues.real[sort_indices[::-1]], eigenvectors.T.real[sort_indices[::-1]], duration
+
+    def time_dependence(t, eigenvalue, A=1, B=1):
+        eigenfreq = (-eigenvalue)**0.5
+        return A * np.cos(self.c * eigenfreq * t) + B * np.sin(self.c * eigenfreq * t)
 
     def show_eigenvectors(self, k=10):
         eigendata = self.eigenvalues(k)
@@ -40,6 +51,16 @@ class WaveEquation:
             eigenvalue = eigendata[0][i]
             eigenvector = eigendata[1][i]
             self.make_plot(np.reshape(eigenvector, (self.M, self.N)), (-eigenvalue)**0.5)
+
+    def im_animate(self, cmap='gist_ncar'):
+        fig = plt.figure()
+        self.im = plt.imshow(self.c, cmap=cmap, origin='lower', extent=(0, 1, 0, 1), animated=True)
+        self.text = plt.text(.5, 2, '')
+        self.ani = animation.FuncAnimation(fig, self.im_update, interval=1, blit=True)
+        plt.colorbar()
+        plt.xlabel("x")
+        plt.ylabel("y")
+        plt.show()
 
     def make_plot(self, v, title=None):
         plt.figure()
@@ -51,6 +72,11 @@ class WaveEquation:
             plt.title(title)
         plt.show()
 
+# class Eigenmode:
+#     def __init__(self, eigenvector, eigenvalue):
+
+
 if __name__ == "__main__":
-    WaveEquation(dx=0.02, L_x = 1, circle=False).show_eigenvectors(10)
-    WaveEquation(dx=0.02, L_x = 1, circle=True).show_eigenvectors(10)
+    WaveEquation(dx=0.01, L_x = 1, circle=False, sparse=True).show_eigenvectors(10)
+    WaveEquation(dx=0.01, L_x = 1, circle=False, sparse=False).show_eigenvectors(10)
+    # WaveEquation(dx=0.02, L_x = 1, circle=True).show_eigenvectors(10)
