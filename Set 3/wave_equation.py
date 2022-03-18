@@ -27,7 +27,7 @@ class WaveEquation:
                             if m != j * self.N + i:
                                 self.matrix[j * self.N + i][m] = 0
 
-    def eigenvalues(self, k):
+    def eigenvalues(self, k=10):
         start = time.time()
 
         if self.sparse:
@@ -36,7 +36,7 @@ class WaveEquation:
             eigenvalues, eigenvectors = la.eig(self.matrix)
 
         duration = time.time() - start
-        print(f"{duration} s")
+        # print(f"{duration} s")
         
         sort_indices = eigenvalues.argsort()[len(eigenvalues) - k:]
 
@@ -72,13 +72,13 @@ class WaveEquation:
         plt.ylabel("y")
         plt.show()
 
-    def make_plot(self, v, title=None, extent=None):
+    def make_plot(self, v, title=None, extent=None, norm=None):
         if extent is None:
             extent = (0, self.L_x, 0, self.L_y)
 
         plt.figure()
 
-        im = plt.imshow(v, origin='lower', cmap='bone', extent=extent)
+        im = plt.imshow(v, origin='lower', cmap='bone', norm=norm, extent=extent)
         plt.colorbar()
         plt.xlabel("x")
         plt.ylabel("y")
