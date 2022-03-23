@@ -26,6 +26,8 @@ class WaveEquation:
                         for m in range(self.N * self.M):
                             if m != j * self.N + i:
                                 self.matrix[j * self.N + i][m] = 0
+                            # else:
+                            #     self.matrix[j * self.N + i][m] = 1
 
     def eigenvalues(self, k=10):
         start = time.time()
@@ -114,8 +116,10 @@ if __name__ == "__main__":
 
     # WaveEquation(dx=0.02, L_x = 1, circle=True).show_eigenvectors(10)
 
-    wave = WaveEquation(dx=0.04, L_x = 1, circle=True, sparse=True)
-    eigenvalues = wave.eigenvalues(10)
+    # wave = WaveEquation(dx=0.04, L_x = 1, circle=True, sparse=True)
+    # eigenvalues = wave.eigenvalues(10)
 
-    for i in range(len(eigenvalues[0])):
-        wave.im_animate(eigenvector=eigenvalues[1][i], eigenvalue=eigenvalues[0][i], t_start=0, t_end=100, t_step=0.01)
+    # for i in range(len(eigenvalues[0])):
+    #     wave.im_animate(eigenvector=eigenvalues[1][i], eigenvalue=eigenvalues[0][i], t_start=0, t_end=100, t_step=0.01)
+
+    WaveEquation(dx=0.05, L_x=4, L_y=4, circle=True).direct_method()
