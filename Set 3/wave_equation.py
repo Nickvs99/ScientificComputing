@@ -68,11 +68,15 @@ class WaveEquation:
         fig = plt.figure()
         self.im = plt.imshow(np.reshape(eigenvector, (self.M, self.N)), norm=Normalize(-np.amax(eigenvector) * 2, np.amax(eigenvector) * 2), cmap=cmap, origin='lower', extent=(0, 1, 0, 1), animated=True)
         self.text = plt.text(.5, 2, '')
-        self.ani = animation.FuncAnimation(fig, self.im_update, fargs=(eigenvector, eigenvalue, t_step,), interval=1, blit=True)
+        self.ani = animation.FuncAnimation(fig, self.im_update, frames=(t_end-t_start)/t_step, fargs=(eigenvector, eigenvalue, t_step,), interval=1, blit=True)
         plt.colorbar()
         plt.xlabel("x")
         plt.ylabel("y")
-        plt.show()
+        # plt.show()
+
+        f = r"animation.gif" 
+        writergif = animation.PillowWriter(fps=30) 
+        self.ani.save(f, writer=writergif)
 
     def make_plot(self, v, title=None, extent=None, norm=None):
         if extent is None:
@@ -96,7 +100,7 @@ class WaveEquation:
 
         b = np.zeros(self.M * self.N)
 
-        # Calculate the index value for the souce within the matrix
+        # Calculate the index value for the source within the matrix
         source_i = round((source[0] + 0.5 * self.L_x) / (self.L_x / self.N))
         source_j = round((source[1] + 0.5 * self.L_y) / (self.L_y / self.M))
 
@@ -116,10 +120,10 @@ if __name__ == "__main__":
 
     # WaveEquation(dx=0.02, L_x = 1, circle=True).show_eigenvectors(10)
 
-    # wave = WaveEquation(dx=0.04, L_x = 1, circle=True, sparse=True)
-    # eigenvalues = wave.eigenvalues(10)
+    wave = WaveEquation(dx=0.04, L_x = 1, circle=True, sparse=True)
+    eigenvalues = wave.eigenvalues(1)
 
-    # for i in range(len(eigenvalues[0])):
-    #     wave.im_animate(eigenvector=eigenvalues[1][i], eigenvalue=eigenvalues[0][i], t_start=0, t_end=100, t_step=0.01)
+    for i in range(len(eigenvalues[0])):
+        wave.im_animate(eigenvector=eigenvalues[1][i], eigenvalue=eigenvalues[0][i], t_start=0, t_end=100, t_step=0.01)
 
-    WaveEquation(dx=0.05, L_x=4, L_y=4, circle=True).direct_method()
+    # WaveEquation(dx=0.05, L_x=4, L_y=4, circle=True).direct_method()

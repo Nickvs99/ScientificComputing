@@ -3,7 +3,7 @@ import numpy as np
 def main():
 
     n = 3
-    m = 4
+    m = 3
 
     print(compute_matrix(n, m))
 
