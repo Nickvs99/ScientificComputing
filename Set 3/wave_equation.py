@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from matplotlib.colors import Normalize
 import time
+import copy
 
 class WaveEquation:
     def __init__(self, c=1, dx=0.01, L_x=1, L_y=1, circle=False, sparse=False):
@@ -84,7 +85,7 @@ class WaveEquation:
 
         plt.figure()
 
-        im = plt.imshow(v, origin='lower', cmap='bone', norm=norm, extent=extent)
+        im = plt.imshow(v, origin='lower', cmap='gist_ncar', norm=norm, extent=extent)
         plt.colorbar()
         plt.xlabel("x")
         plt.ylabel("y")
@@ -106,11 +107,15 @@ class WaveEquation:
 
         b_index = source_j * self.N + source_i
 
-        # TODO why -1?
-        b[b_index] = -1
+        b[b_index] = 1
+
+        self.copy_matrix = copy.deepcopy(self.matrix)
+
+        self.copy_matrix[b_index].fill(0)
+        self.copy_matrix[b_index][b_index] = 1
 
         # Compute steady state solution
-        c = la.solve(self.matrix, b)
+        c = la.solve(self.copy_matrix, b)
 
         self.make_plot(np.reshape(c, (self.M, self.N)), extent = (-0.5 * self.L_x, 0.5 * self.L_x, -0.5 * self.L_y, 0.5 * self.L_y))
 
