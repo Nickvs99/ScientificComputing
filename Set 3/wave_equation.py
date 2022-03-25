@@ -14,6 +14,7 @@ class WaveEquation:
         self.L_x = L_x
         self.L_y = L_y
         self.sparse = sparse
+        self.circle = circle
 
         self.N = int(L_x / dx)
         self.M = int(L_y / dx)
@@ -49,13 +50,14 @@ class WaveEquation:
         eigenfreq = (-eigenvalue)**0.5
         return A * np.cos(self.c * eigenfreq * t) + B * np.sin(self.c * eigenfreq * t)
 
-    def show_eigenvectors(self, k=10):
+    def show_eigenvectors(self, k=10, cmap='gist_ncar'):
         eigendata = self.eigenvalues(k)
 
         for i in range(len(eigendata[0])):
             eigenvalue = eigendata[0][i]
             eigenvector = eigendata[1][i]
-            self.make_plot(np.reshape(eigenvector, (self.M, self.N)), (-eigenvalue)**0.5)
+            print(rf"$\lambda =$ {round((-eigenvalue)**0.5,5)}")
+            self.make_plot(np.reshape(eigenvector, (self.M, self.N)), norm=Normalize(-0.045, 0.045), cmap=cmap)
 
     def im_update(self, frame, eigenvector, eigenvalue, t_step):
         self.im.set_array(np.reshape(eigenvector, (self.M, self.N)) * self.time_dependence(frame * t_step, eigenvalue))
@@ -65,32 +67,43 @@ class WaveEquation:
 
         return self.im, self.text,
 
-    def im_animate(self, eigenvector, eigenvalue, t_start, t_end, t_step, cmap='bone'):
+    def im_animate(self, eigenvector, eigenvalue, t_start, t_end, t_step, cmap='bone', save=None, extent=None):
+        if extent is None:
+            extent = (0, self.L_x, 0, self.L_y)
         fig = plt.figure()
-        self.im = plt.imshow(np.reshape(eigenvector, (self.M, self.N)), norm=Normalize(-np.amax(eigenvector) * 2, np.amax(eigenvector) * 2), cmap=cmap, origin='lower', extent=(0, 1, 0, 1), animated=True)
+        self.im = plt.imshow(np.reshape(eigenvector, (self.M, self.N)), norm=Normalize(-np.amax(np.abs(eigenvector)) * 2, np.amax(np.abs(eigenvector)) * 2), cmap=cmap, origin='lower', extent=extent, animated=True)
         self.text = plt.text(.5, 2, '')
-        self.ani = animation.FuncAnimation(fig, self.im_update, frames=(t_end-t_start)/t_step, fargs=(eigenvector, eigenvalue, t_step,), interval=1, blit=True)
+        self.ani = animation.FuncAnimation(fig, self.im_update, frames=range(int((t_end-t_start)/t_step)), fargs=(eigenvector, eigenvalue, t_step,), interval=1, blit=True)
         plt.colorbar()
+        plt.title((-eigenvalue)**0.5)
         plt.xlabel("x")
         plt.ylabel("y")
-        # plt.show()
+        
+        if save is not None:
+            import matplotlib as mpl 
+            mpl.rcParams['animation.ffmpeg_path'] = r'C:\\Users\\sande\\Desktop\\ffmpeg\\bin\\ffmpeg.exe'
+            f = f"Animations/animation_{self.L_x}_{self.L_y}{('_circle' if self.circle else '')}_{save}.mp4" 
+            writervideo = animation.FFMpegWriter(fps=30, bitrate=50000)
+            self.ani.save(f, writer=writervideo)
+        else:
+            plt.show()
 
-        f = r"animation.gif" 
-        writergif = animation.PillowWriter(fps=30) 
-        self.ani.save(f, writer=writergif)
-
-    def make_plot(self, v, title=None, extent=None, norm=None):
+    def make_plot(self, v, title=None, extent=None, norm=None, cmap='gist_ncar'):
         if extent is None:
             extent = (0, self.L_x, 0, self.L_y)
 
         plt.figure()
 
-        im = plt.imshow(v, origin='lower', cmap='gist_ncar', norm=norm, extent=extent)
+        im = plt.imshow(v, origin='lower', cmap=cmap, norm=norm, extent=extent)
         plt.colorbar()
         plt.xlabel("x")
         plt.ylabel("y")
         if title:
             plt.title(title)
+
+        if self.circle:
+            ax = plt.gca()
+            ax.add_patch(plt.Circle((0.5, 0.5), 0.5, color='k', lw=0.5, fill=False))
         plt.show()
 
     def direct_method(self, source=(0.6, 1.2)):
@@ -120,15 +133,18 @@ class WaveEquation:
         self.make_plot(np.reshape(c, (self.M, self.N)), extent = (-0.5 * self.L_x, 0.5 * self.L_x, -0.5 * self.L_y, 0.5 * self.L_y))
 
 if __name__ == "__main__":
-    # WaveEquation(dx=0.01, L_x = 1, circle=False, sparse=True).show_eigenvectors(10)
+    # WaveEquation(dx=0.02, L_x = 1, circle=False, sparse=False).show_eigenvectors(2, cmap="bwr")
     # WaveEquation(dx=0.01, L_x = 1, circle=False, sparse=False).show_eigenvectors(10)
 
     # WaveEquation(dx=0.02, L_x = 1, circle=True).show_eigenvectors(10)
 
-    wave = WaveEquation(dx=0.04, L_x = 1, circle=True, sparse=True)
-    eigenvalues = wave.eigenvalues(1)
+    for wave in (WaveEquation(dx=0.04, L_x = 1, circle=False, sparse=True),
+                 WaveEquation(dx=0.04, L_x = 2, circle=False, sparse=True),
+                 WaveEquation(dx=0.04, L_x = 1, circle=True, sparse=True)):
+        # wave = WaveEquation(dx=0.04, L_x = 1, circle=True, sparse=True)
+        eigenvalues = wave.eigenvalues(4)
 
-    for i in range(len(eigenvalues[0])):
-        wave.im_animate(eigenvector=eigenvalues[1][i], eigenvalue=eigenvalues[0][i], t_start=0, t_end=100, t_step=0.01)
+        for i in range(len(eigenvalues[0])):
+            wave.im_animate(eigenvector=eigenvalues[1][i], eigenvalue=eigenvalues[0][i], cmap='bwr', t_start=0, t_end=2, t_step=0.01, save=str(i))
 
     # WaveEquation(dx=0.05, L_x=4, L_y=4, circle=True).direct_method()
