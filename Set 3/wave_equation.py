@@ -28,8 +28,8 @@ class WaveEquation:
                         for m in range(self.N * self.M):
                             if m != j * self.N + i:
                                 self.matrix[j * self.N + i][m] = 0
-                            # else:
-                            #     self.matrix[j * self.N + i][m] = 1
+                            else:
+                                self.matrix[j * self.N + i][m] = 1
 
     def eigenvalues(self, k=10):
         start = time.time()
